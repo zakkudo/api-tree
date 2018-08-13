@@ -8,8 +8,8 @@ const validator = new Validator();
 /**
  * @private
  */
-function compile(schema = {}) {
-    return ['params', 'body'].reduce((accumulator, k) => {
+function compile(schema) {
+    const compiled = ['params', 'body'].reduce((accumulator, k) => {
         if (schema[k]) {
             return Object.assign({}, accumulator, {
                 [k]: validator.compile(schema[k])
@@ -18,24 +18,23 @@ function compile(schema = {}) {
 
         return accumulator;
     }, {});
-}
 
+    /**
+     * @private
+     */
+    return function validate(options) {
+        const keys = Object.keys(compiled);
 
-/**
- * @private
-*/
-function isValid(validate, options) {
-    const keys = Object.keys(validate);
-    const invalidKey = keys.find((k) => {
-        return !validate[k](options[k]);
-    });
+        return keys.reduce((accumulator, k) => {
+            const errors = compiled[k](options[k] || {})
 
-    if (invalidKey !== undefined) {
-        validate.errors =  validate[invalidKey].errors;
+            if (compiled[k].errors && compiled[k].errors.length) {
+                return Object.assign({}, accumulator || {}, {[k]: compiled[k].errors});
+            }
+        }, null);
     }
-
-    return !validate.errors;
 }
+
 
 
 /**
@@ -49,7 +48,7 @@ function isValid(validate, options) {
  * @private
  */
 function generateFetchMethod(self, [pathname, endpointOptions, schema = {}]) {
-    const compiled = compile(schema);
+    const validate = compile(schema);
 
     return (overrideOptions = {}) => {
         const baseOptions = self.options.toJS();
@@ -59,12 +58,10 @@ function generateFetchMethod(self, [pathname, endpointOptions, schema = {}]) {
             overrideOptions
         );
         const url = `${self.baseUrl}${pathname}`;
-        const validate = compile(schema);
+        const errorsByKey = validate(options);
 
-
-        if (schema && !isValid(validate, options)) {
-            TODO
-            return Promise.reject(new ValidationError(isValid.errors));
+        if (errorsByKey) {
+            return Promise.reject(new ValidationError(errorsByKey));
         }
 
         return fetch(url, options);
@@ -100,15 +97,93 @@ function parse(self, data) {
 }
 
 /**
- * Converts a configuration into an easy to use api tree.
- * @module lib/ApiTree
+ * Helper class to make working with api collections enjoyable. Generate an
+ * easy to use api tree that includes format checking using
+ * [JSON Schema]{@link http://json-schema.org/} for the body and params
+ * with only a single configuration object. Network calls are executed using
+ * a thin convenience wrapper around [fetch]{@link https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch}.
+ *
+ * Why use this?
+ *
+ * - Consistancy with simplicity
+ * - Leverages native fetch, adding a thin convenience layer.
+ * - Use json schemas to ensure correct usage of the apis
+ * - Share authorization handling using a single location that can be updated dynamically
+ * - Share a single transform for the responses and request in a location that can be updated dynamically
+ *
+ * Install with:
+ *
+ * ```console
+ * yarn add @zakkudo/api-tree
+ * ```
+ *
+ * @example
+ * import ApiTree from '@zakkudo/api-tree';
+ *
+ * const api = new ApiTree('https://backend', {
+ *     users: {
+ *         query: ['/v1/users'],
+ *         post: ['/v1/users', {method: 'POST'}, {
+ *              body: {
+ *                  type: 'object',
+ *                  required: ['first_name', 'last_name'],
+ *                  properties: {
+ *                       first_name: {
+ *                           type: 'string'
+ *                       },
+ *                       last_name: {
+ *                           type: 'string'
+ *                       },
+ *                  },
+ *              }
+ *         }],
+ *         get: ['/v2/users/:userId', {}, {
+ *              params: {
+ *                  type: 'object',
+ *                  required: ['userId'],
+ *                  properties: {
+ *                       userId: {
+ *                           type: 'string',
+ *                           pattern: '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}',
+ *                       },
+ *                  },
+ *              }
+ *         }]
+ *     }
+ * }, {
+ *     headers: {
+ *          'X-AUTH-TOKEN': '1234'
+ *     }
+ * });
+ *
+ * //Set headers after the fact
+ * api.options.headers['X-AUTH-TOKEN'] = '5678';
+ *
+ * // Try using a valid id
+ * api.get({params: {userId: 'ff599c67-1cac-4167-927e-49c02c93625f'}}).then((user) => {
+ *      console.log(user); // {id: 'ff599c67-1cac-4167-927e-49c02c93625f', first_name: 'john', last_name: 'doe'}
+ * })
+ *
+ * // Try fetching without an id
+ * api.get().catch((reason) => {
+ *      console.log(reason); // "params: should have required property 'userId'
+ * })
+ *
+ * // Try using an invalidly formatted id
+ * api.get({params: {userId: 'invalid format'}}).catch((reason) => {
+ *      console.log(reason); // "params.userId: should match pattern \"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\""
+ * });
+ *
+ * @module ApiTree
  */
 export default class ApiTree {
     /**
-     * @param {String} baseUrl - The url to concat with all paths
-     * @param {*} tree - The configuration tree for the apis
-     * @param {Object} options - Options that will be the default base init for fetch operations.
-     * Other inits are layered on top of this.
+     * @param {String} baseUrl - The url to prefix with all paths
+     * @param {*} tree - The configuration tree for the apis. Accepts a
+     * deeply nested set of objects where array are interpreted to be of the form `[path, options, schema]`. Thos array are converted into
+     * api fetching functions.
+     * @param {Object} options - Options that will be the default base init for fetch operations. The same as those used for `@zakkudo/fetch`
+     * @return {Object} The generated api tree
     */
     constructor(baseUrl, tree, options = {}) {
         this.baseUrl = baseUrl || '';

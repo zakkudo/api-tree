@@ -1,3 +1,3 @@
 #!/bin/sh
 
-./node_modules/.bin/jest --coverage
+./node_modules/.bin/jest --coverage --coveragePathIgnorePatterns '.*TestHelper.js'

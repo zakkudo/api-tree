@@ -1,9 +1,12 @@
 {
   "name": "@zakkudo/api-tree",
-  "version": "0.0.7",
-  "description": "Make working with redux api-tree enjoyable.",
+  "version": "0.0.1",
+  "description": "Helper class to make working with api collections enjoyable.",
   "keywords": [
-    "redux"
+    "fetch",
+    "jsonschema",
+    "api",
+    "validation"
   ],
   "main": "build/index.js",
   "files": [
