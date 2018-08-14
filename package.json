@@ -1,6 +1,6 @@
 {
   "name": "@zakkudo/api-tree",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Helper class to make working with api collections enjoyable.",
   "keywords": [
     "fetch",

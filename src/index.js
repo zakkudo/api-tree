@@ -159,18 +159,28 @@ function parse(self, data) {
  * //Set headers after the fact
  * api.options.headers['X-AUTH-TOKEN'] = '5678';
  *
+ * //Get 10 users
+ * api.users.query({params: {limit: 10}}).then((users) => {
+ *      console.log(users); // [{id: ...}, ...]
+ * });
+ *
+ * //Create a user
+ * api.users.post({first_name: 'John', last_name: 'Doe'}).then((response) => {
+ *      console.log(response); // {id: 'ff599c67-1cac-4167-927e-49c02c93625f', first_name: 'John', last_name: 'Doe'}
+ * });
+ *
  * // Try using a valid id
- * api.get({params: {userId: 'ff599c67-1cac-4167-927e-49c02c93625f'}}).then((user) => {
+ * api.users.get({params: {userId: 'ff599c67-1cac-4167-927e-49c02c93625f'}}).then((user) => {
  *      console.log(user); // {id: 'ff599c67-1cac-4167-927e-49c02c93625f', first_name: 'john', last_name: 'doe'}
  * })
  *
  * // Try fetching without an id
- * api.get().catch((reason) => {
+ * api.users.get().catch((reason) => {
  *      console.log(reason); // "params: should have required property 'userId'
  * })
  *
  * // Try using an invalidly formatted id
- * api.get({params: {userId: 'invalid format'}}).catch((reason) => {
+ * api.usrs.get({params: {userId: 'invalid format'}}).catch((reason) => {
  *      console.log(reason); // "params.userId: should match pattern \"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\""
  * });
  *
