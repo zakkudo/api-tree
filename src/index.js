@@ -97,7 +97,7 @@ function parse(self, data) {
 }
 
 /**
- * Helper class to make working with api collections enjoyable. Generate an
+ * Make working with backend api trees enjoyable. Generate an
  * easy to use api tree that includes format checking using
  * [JSON Schema]{@link http://json-schema.org/} for the body and params
  * with only a single configuration object. Network calls are executed using
