@@ -389,8 +389,8 @@ describe('ApiTree', () => {
     it('chooses the first best matching', () => {
         const api = new ApiTree('https://backend/v1', {
             get: [
-                ['/test/path/:id1'],
-                ['/test/path/:id2'],
+                ['/test/path/:id'],
+                ['/test/path/:id/detail'],
             ],
         });
 
@@ -401,8 +401,33 @@ describe('ApiTree', () => {
 
         return api.get({'params': {id: '1234'}}).then((response) => {
             expect(Helper.getCallArguments(fetch)).toEqual([[
-                'https://backend/v1/test/path/:id1',
+                'https://backend/v1/test/path/:id',
                 {params: {id: '1234'}},
+            ]]);
+            expect(response).toEqual('test response');
+        });
+    });
+
+    it('chooses the first best matching when multiple levels', () => {
+        const api = new ApiTree('https://backend/v1', {
+            get: [
+                ['/users'],
+                ['/users/:userid'],
+                ['/users/:userId/roles'],
+                ['/users/:userId/roles/:roleId'],
+                ['/users/:userId/roles/:roleId/detail'],
+            ],
+        });
+
+        expect(JSON.parse(JSON.stringify(api))).toEqual({
+            baseUrl: 'https://backend/v1',
+            options: {},
+        });
+
+        return api.get({'params': {userId: '1234', roleId: '5678'}}).then((response) => {
+            expect(Helper.getCallArguments(fetch)).toEqual([[
+                'https://backend/v1/users/:userId/roles/:roleId',
+                {params: {userId: '1234', roleId: '5678'}},
             ]]);
             expect(response).toEqual('test response');
         });

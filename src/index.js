@@ -55,7 +55,7 @@ function getMatchingOverload(overloads, baseOptions = {}, overrideOptions = {}) 
 function generateFetchMethod(self, config) {
     if (isOverloaded(config)) {
         const validate = config.map((c) => {
-            const [pathname, endpointOptions, schema = {}] = config;
+            const [pathname, endpointOptions, schema = {}] = c;
 
             return validator.compile(schema);
         });
@@ -166,32 +166,38 @@ function parse(self, data) {
  *     users: {
  *         post: ['/v1/users', {method: 'POST'}, {
  *              $schema: "http://json-schema.org/draft-07/schema#",
- *              body: {
- *                  type: 'object',
- *                  required: ['first_name', 'last_name'],
- *                  properties: {
- *                       first_name: {
- *                           type: 'string'
- *                       },
- *                       last_name: {
- *                           type: 'string'
- *                       },
+ *              type: 'object',
+ *              properties: {
+ *                  body: {
+ *                      type: 'object',
+ *                      required: ['first_name', 'last_name'],
+ *                      properties: {
+ *                           first_name: {
+ *                               type: 'string'
+ *                           },
+ *                           last_name: {
+ *                               type: 'string'
+ *                           },
+ *                      },
  *                  },
- *              }
+ *              },
  *         }],
  *         get: [
  *             ['/v1/users'], //Endpoint overloading.  If userId is provided as a param, the
  *                            //second endpoint is automatically used
  *             ['/v2/users/:userId', {}, {
  *                  $schema: "http://json-schema.org/draft-07/schema#",
- *                  params: {
- *                      type: 'object',
- *                      required: ['userId'],
- *                      properties: {
- *                           userId: {
- *                               type: 'string',
- *                               pattern: '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}',
- *                           },
+ *                  type: 'object',
+ *                  properties: {
+ *                      params: {
+ *                          type: 'object',
+ *                          required: ['userId'],
+ *                          properties: {
+ *                               userId: {
+ *                                   type: 'string',
+ *                                   pattern: '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}',
+ *                               },
+ *                          },
  *                      },
  *                  },
  *             }],
@@ -227,7 +233,7 @@ function parse(self, data) {
  * })
  *
  * // Try using an invalidly formatted id
- * api.usrs.get({params: {userId: 'invalid format'}}).catch((reason) => {
+ * api.users.get({params: {userId: 'invalid format'}}).catch((reason) => {
  *      console.log(reason); // "params.userId: should match pattern \"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\""
  * });
  *
