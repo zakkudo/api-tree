@@ -83,13 +83,13 @@ describe('ApiTree', () => {
         });
     });
 
-    it('throws type validation error for params field', () => {
+    fit('throws type validation error for params field', () => {
         const api = new ApiTree('https://backend/v1', {
             get: ['/users/:id', {
 			}, {
+                $schema: "http://json-schema.org/draft-07/schema#",
 				params: {
 					type: "object",
-                    //required: [ "latitude", "longitude" ],
 					properties: {
 						firstName: {
 							type: "string",
@@ -117,6 +117,7 @@ describe('ApiTree', () => {
         const api = new ApiTree('https://backend/v1', {
             get: ['/users/:id', {
 			}, {
+                $schema: "http://json-schema.org/draft-07/schema#",
 				params: {
 					type: "object",
                     required: [ "firstName" ],
@@ -147,6 +148,7 @@ describe('ApiTree', () => {
         const api = new ApiTree('https://backend/v1', {
             get: ['/users/:id', {
 			}, {
+                $schema: "http://json-schema.org/draft-07/schema#",
 				params: {
 					type: "object",
                     required: [ "firstName" ],
@@ -177,6 +179,7 @@ describe('ApiTree', () => {
         const api = new ApiTree('https://backend/v1', {
             get: ['/users', {
 			}, {
+                $schema: "http://json-schema.org/draft-07/schema#",
 				body: {
 					type: "object",
                     required: [ "limit" ],
@@ -207,6 +210,7 @@ describe('ApiTree', () => {
         const api = new ApiTree('https://backend/v1', {
             get: ['/users/:userId', {
 			}, {
+                $schema: "http://json-schema.org/draft-07/schema#",
 				params: {
 					type: "object",
                     required: [ "userId" ],
@@ -238,6 +242,7 @@ describe('ApiTree', () => {
         const api = new ApiTree('https://backend/v1', {
             get: ['/users/:id', {
 			}, {
+                $schema: "http://json-schema.org/draft-07/schema#",
 				body: {
 					type: "object",
                     required: [ "firstName" ],
@@ -268,6 +273,7 @@ describe('ApiTree', () => {
         const api = new ApiTree('https://backend/v1', {
             get: ['/users/:id', {
 			}, {
+                $schema: "http://json-schema.org/draft-07/schema#",
 				body: {
 					type: "object",
                     required: [ "firstName" ],
@@ -292,5 +298,92 @@ describe('ApiTree', () => {
                 message: "should have required property 'firstName'",
             }]}));
 		});
+    });
+
+    it('generates single meaningless override that always gets used', () => {
+        const api = new ApiTree('https://backend/v1', {
+            get: [
+                ['/test/path']
+            ],
+        });
+
+        expect(JSON.parse(JSON.stringify(api))).toEqual({
+            baseUrl: 'https://backend/v1',
+            options: {},
+        });
+
+        return api.get({'params': {id: '1234'}}).then((response) => {
+            expect(Helper.getCallArguments(fetch)).toEqual([[
+                'https://backend/v1/test/path',
+                {params: {id: '1234'}},
+            ]]);
+            expect(response).toEqual('test response');
+        });
+    });
+
+    it('uses matching override when first', () => {
+        const api = new ApiTree('https://backend/v1', {
+            get: [
+                ['/test/path/:id'],
+                ['/test/path'],
+            ],
+        });
+
+        expect(JSON.parse(JSON.stringify(api))).toEqual({
+            baseUrl: 'https://backend/v1',
+            options: {},
+        });
+
+        return api.get({'params': {id: '1234'}}).then((response) => {
+            expect(Helper.getCallArguments(fetch)).toEqual([[
+                'https://backend/v1/test/path/:id',
+                {params: {id: '1234'}},
+            ]]);
+            expect(response).toEqual('test response');
+        });
+    });
+
+    it('uses matching override when last', () => {
+        const api = new ApiTree('https://backend/v1', {
+            get: [
+                ['/test/path'],
+                ['/test/path/:id'],
+            ],
+        });
+
+        expect(JSON.parse(JSON.stringify(api))).toEqual({
+            baseUrl: 'https://backend/v1',
+            options: {},
+        });
+
+        return api.get({'params': {id: '1234'}}).then((response) => {
+            expect(Helper.getCallArguments(fetch)).toEqual([[
+                'https://backend/v1/test/path/:id',
+                {params: {id: '1234'}},
+            ]]);
+            expect(response).toEqual('test response');
+        });
+    });
+
+    it('chooses the first best matching', () => {
+        const api = new ApiTree('https://backend/v1', {
+            get: [
+                ['/test/path/:id1'],
+                ['/test/path/:id2'],
+            ],
+        });
+
+        expect(JSON.parse(JSON.stringify(api))).toEqual({
+            baseUrl: 'https://backend/v1',
+            options: {},
+        });
+
+        return api.get({'params': {id: '1234'}}).then((response) => {
+            expect(Helper.getCallArguments(fetch)).toEqual([[
+                'https://backend/v1/test/path/:id1',
+                {params: {id: '1234'}},
+            ]]);
+            expect(response).toEqual('test response');
+        });
     });
 });

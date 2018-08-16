@@ -27,8 +27,8 @@ import ApiTree from '@zakkudo/api-tree';
 
 const api = new ApiTree('https://backend', {
     users: {
-        query: ['/v1/users'],
         post: ['/v1/users', {method: 'POST'}, {
+             $schema: "http://json-schema.org/draft-07/schema#",
              body: {
                  type: 'object',
                  required: ['first_name', 'last_name'],
@@ -42,18 +42,23 @@ const api = new ApiTree('https://backend', {
                  },
              }
         }],
-        get: ['/v2/users/:userId', {}, {
-             params: {
-                 type: 'object',
-                 required: ['userId'],
-                 properties: {
-                      userId: {
-                          type: 'string',
-                          pattern: '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}',
-                      },
+        get: [
+            ['/v1/users'], //Endpoint overloading.  If userId is provided as a param, the
+                           //second endpoint is automatically used
+            ['/v2/users/:userId', {}, {
+                 $schema: "http://json-schema.org/draft-07/schema#",
+                 params: {
+                     type: 'object',
+                     required: ['userId'],
+                     properties: {
+                          userId: {
+                              type: 'string',
+                              pattern: '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}',
+                          },
+                     },
                  },
-             }
-        }]
+            }],
+        ],
     }
 }, {
     headers: {
@@ -65,7 +70,7 @@ const api = new ApiTree('https://backend', {
 api.options.headers['X-AUTH-TOKEN'] = '5678';
 
 //Get 10 users
-api.users.query({params: {limit: 10}}).then((users) => {
+api.users.get({params: {limit: 10}}).then((users) => {
      console.log(users); // [{id: ...}, ...]
 });
 

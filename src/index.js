@@ -5,37 +5,42 @@ import {fromJS} from 'immutable';
 
 const validator = new Validator();
 
-/**
- * @private
- */
-function compile(schema) {
-    const compiled = ['params', 'body'].reduce((accumulator, k) => {
-        if (schema[k]) {
-            return Object.assign({}, accumulator, {
-                [k]: validator.compile(schema[k])
-            });
-        }
 
-        return accumulator;
-    }, {});
+function getTemplateVariables(pathname) {
+    const matches = pathname.match(/\/:[^\/]+/g) || [];
 
-    /**
-     * @private
-     */
-    return function validate(options) {
-        const keys = Object.keys(compiled);
-
-        return keys.reduce((accumulator, k) => {
-            const errors = compiled[k](options[k] || {})
-
-            if (compiled[k].errors && compiled[k].errors.length) {
-                return Object.assign({}, accumulator || {}, {[k]: compiled[k].errors});
-            }
-        }, null);
-    }
+    return matches.map((p) => p.slice(2));
 }
 
+function getMatchingOverload(overloads, baseOptions = {}, overrideOptions = {}) {
+    let matchCount = -1;
+    let bestMatch = null;
+    let matchIndex = -1;
+    const overrideParams = overrideOptions.params || {};
 
+    overloads.forEach((o, index) => {
+        const [pathname, options = {}] = o;
+        const variables = getTemplateVariables(pathname) || [];
+        const params = Object.assign({}, baseOptions.params || {}, options.params || {}, overrideParams);
+
+        const count = variables.reduce((accumulator, v) => {
+
+            if (params.hasOwnProperty(v)) {
+                return accumulator + 1;
+            }
+
+            return accumulator;
+        }, 0);
+
+        if (count > matchCount) {
+            matchCount = count;
+            bestMatch = o;
+            matchIndex = index;
+        }
+    });
+
+    return matchIndex
+}
 
 /**
  * Generates a function that calls fetch with predefined
@@ -47,25 +52,62 @@ function compile(schema) {
  * @return {Function} A function with callable options to do an api call
  * @private
  */
-function generateFetchMethod(self, [pathname, endpointOptions, schema = {}]) {
-    const validate = compile(schema);
+function generateFetchMethod(self, config) {
+    if (isOverloaded(config)) {
+        const validate = config.map((c) => {
+            const [pathname, endpointOptions, schema = {}] = config;
 
-    return (overrideOptions = {}) => {
-        const baseOptions = self.options.toJS();
-        const options = Object.assign(
-            baseOptions,
-            endpointOptions,
-            overrideOptions
-        );
-        const url = `${self.baseUrl}${pathname}`;
-        const errorsByKey = validate(options);
+            return validator.compile(schema);
+        });
 
-        if (errorsByKey) {
-            return Promise.reject(new ValidationError(errorsByKey));
-        }
+        return (overrideOptions = {}) => {
+            const baseOptions = self.options.toJS();
+            const index = getMatchingOverload(config, baseOptions, overrideOptions);
+            const overload = config[index];
+            const [pathname, endpointOptions, schema = {}] = overload;
+            const options = Object.assign(
+                {},
+                baseOptions,
+                endpointOptions,
+                overrideOptions
+            );
+            const url = `${self.baseUrl}${pathname}`;
+            validate[index](options);
+            const errorsByKey = validate[index].errors;
 
-        return fetch(url, options);
-    };
+            if (errorsByKey) {
+                return Promise.reject(new ValidationError(errorsByKey));
+            }
+
+            return fetch(url, options);
+        };
+    } else {
+        const [pathname, endpointOptions, schema = {}] = config;
+        const validate = validator.compile(schema);
+
+
+        return (overrideOptions = {}) => {
+            const baseOptions = self.options.toJS();
+            const options = Object.assign(
+                baseOptions,
+                endpointOptions,
+                overrideOptions
+            );
+            const url = `${self.baseUrl}${pathname}`;
+            validate(options);
+            const errorsByKey = validate.error;
+
+            if (errorsByKey) {
+                return Promise.reject(new ValidationError(errorsByKey));
+            }
+
+            return fetch(url, options);
+        };
+    }
+}
+
+function isOverloaded(data) {
+    return Array.isArray(data) && Array.isArray(data[0]);
 }
 
 /**
@@ -122,8 +164,8 @@ function parse(self, data) {
  *
  * const api = new ApiTree('https://backend', {
  *     users: {
- *         query: ['/v1/users'],
  *         post: ['/v1/users', {method: 'POST'}, {
+ *              $schema: "http://json-schema.org/draft-07/schema#",
  *              body: {
  *                  type: 'object',
  *                  required: ['first_name', 'last_name'],
@@ -137,18 +179,23 @@ function parse(self, data) {
  *                  },
  *              }
  *         }],
- *         get: ['/v2/users/:userId', {}, {
- *              params: {
- *                  type: 'object',
- *                  required: ['userId'],
- *                  properties: {
- *                       userId: {
- *                           type: 'string',
- *                           pattern: '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}',
- *                       },
+ *         get: [
+ *             ['/v1/users'], //Endpoint overloading.  If userId is provided as a param, the
+ *                            //second endpoint is automatically used
+ *             ['/v2/users/:userId', {}, {
+ *                  $schema: "http://json-schema.org/draft-07/schema#",
+ *                  params: {
+ *                      type: 'object',
+ *                      required: ['userId'],
+ *                      properties: {
+ *                           userId: {
+ *                               type: 'string',
+ *                               pattern: '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}',
+ *                           },
+ *                      },
  *                  },
- *              }
- *         }]
+ *             }],
+ *         ],
  *     }
  * }, {
  *     headers: {
@@ -160,7 +207,7 @@ function parse(self, data) {
  * api.options.headers['X-AUTH-TOKEN'] = '5678';
  *
  * //Get 10 users
- * api.users.query({params: {limit: 10}}).then((users) => {
+ * api.users.get({params: {limit: 10}}).then((users) => {
  *      console.log(users); // [{id: ...}, ...]
  * });
  *
