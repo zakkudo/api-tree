@@ -83,20 +83,23 @@ describe('ApiTree', () => {
         });
     });
 
-    fit('throws type validation error for params field', () => {
+    it('throws type validation error for params field', () => {
         const api = new ApiTree('https://backend/v1', {
             get: ['/users/:id', {
 			}, {
                 $schema: "http://json-schema.org/draft-07/schema#",
-				params: {
-					type: "object",
-					properties: {
-						firstName: {
-							type: "string",
-							description: "The person's first name.",
-						},
-					},
-				},
+                type: "object",
+                properties: {
+                    params: {
+                        type: "object",
+                        properties: {
+                            firstName: {
+                                type: "string",
+                                description: "The person's first name.",
+                            },
+                        },
+                    },
+                },
 			}],
         });
 
@@ -106,10 +109,10 @@ describe('ApiTree', () => {
         });
 
 		return api.get({params: {firstName: null}}).catch((reason) => {
-            expect(reason).toEqual(new ValidationError({params: [{
-                dataPath: '.firstName',
+            expect(reason).toEqual(new ValidationError('https://backend/v1/users/:id', [{
+                dataPath: '.params.firstName',
                 message: 'should be string',
-            }]}));
+            }]));
 		});
     });
 
@@ -118,16 +121,19 @@ describe('ApiTree', () => {
             get: ['/users/:id', {
 			}, {
                 $schema: "http://json-schema.org/draft-07/schema#",
-				params: {
-					type: "object",
-                    required: [ "firstName" ],
-					properties: {
-						firstName: {
-							type: "string",
-							description: "The person's first name.",
-						},
-					},
-				},
+                type: "object",
+                properties: {
+                    params: {
+                        type: "object",
+                        required: [ "firstName" ],
+                        properties: {
+                            firstName: {
+                                type: "string",
+                                description: "The person's first name.",
+                            },
+                        },
+                    },
+                },
 			}],
         });
 
@@ -137,10 +143,10 @@ describe('ApiTree', () => {
         });
 
 		return api.get({params: {}}).catch((reason) => {
-            expect(reason).toEqual(new ValidationError({params: [{
-                dataPath: '',
+            expect(reason).toEqual(new ValidationError('https://backend/v1/users/:id', [{
+                dataPath: '.params',
                 message: "should have required property 'firstName'",
-            }]}));
+            }]));
 		});
     });
 
@@ -149,16 +155,19 @@ describe('ApiTree', () => {
             get: ['/users/:id', {
 			}, {
                 $schema: "http://json-schema.org/draft-07/schema#",
-				params: {
-					type: "object",
-                    required: [ "firstName" ],
-					properties: {
-						firstName: {
-							type: "string",
-							description: "The person's first name.",
-						},
-					},
-				},
+                type: "object",
+                properties: {
+                    params: {
+                        type: "object",
+                        required: [ "firstName" ],
+                        properties: {
+                            firstName: {
+                                type: "string",
+                                description: "The person's first name.",
+                            },
+                        },
+                    },
+                },
 			}],
         });
 
@@ -168,10 +177,10 @@ describe('ApiTree', () => {
         });
 
 		return api.get().catch((reason) => {
-            expect(reason).toEqual(new ValidationError({params: [{
+            expect(reason).toEqual(new ValidationError('https://backend/v1/users/:id', [{
                 dataPath: '',
                 message: "should have required property 'firstName'",
-            }]}));
+            }]));
 		});
     });
 
@@ -180,16 +189,19 @@ describe('ApiTree', () => {
             get: ['/users', {
 			}, {
                 $schema: "http://json-schema.org/draft-07/schema#",
-				body: {
-					type: "object",
-                    required: [ "limit" ],
-					properties: {
-						limit: {
-							type: "number",
-							description: "Max number of results to return.",
-						},
-					},
-				},
+                type: "object",
+                properties: {
+                    body: {
+                        type: "object",
+                        required: [ "limit" ],
+                        properties: {
+                            limit: {
+                                type: "number",
+                                description: "Max number of results to return.",
+                            },
+                        },
+                    },
+                },
 			}],
         });
 
@@ -199,10 +211,10 @@ describe('ApiTree', () => {
         });
 
 		return api.get({body: {limit: null}}).catch((reason) => {
-            expect(reason).toEqual(new ValidationError({body: [{
-                dataPath: '.limit',
+            expect(reason).toEqual(new ValidationError('https://backend/v1/users', [{
+                dataPath: '.body.limit',
                 message: 'should be number',
-            }]}));
+            }]));
 		});
     });
 
@@ -211,17 +223,20 @@ describe('ApiTree', () => {
             get: ['/users/:userId', {
 			}, {
                 $schema: "http://json-schema.org/draft-07/schema#",
-				params: {
-					type: "object",
-                    required: [ "userId" ],
-					properties: {
-						userId: {
-							type: "string",
-                            pattern: '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}',
-							description: "The Users Id.",
-						},
-					},
-				},
+                type: "object",
+                properties: {
+                    params: {
+                        type: "object",
+                        required: [ "userId" ],
+                        properties: {
+                            userId: {
+                                type: "string",
+                                pattern: '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}',
+                                description: "The Users Id.",
+                            },
+                        },
+                    },
+                },
 			}],
         });
 
@@ -231,10 +246,10 @@ describe('ApiTree', () => {
         });
 
 		return api.get({params: {userId: 'invalid id'}}).catch((reason) => {
-            expect(reason).toEqual(new ValidationError({params: [{
-                dataPath: '.userId',
+            expect(reason).toEqual(new ValidationError('https://backend/v1/users/:userId', [{
+                dataPath: '.params.userId',
                 message: 'should match pattern \"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"',
-            }]}));
+            }]));
 		});
     });
 
@@ -243,16 +258,19 @@ describe('ApiTree', () => {
             get: ['/users/:id', {
 			}, {
                 $schema: "http://json-schema.org/draft-07/schema#",
-				body: {
-					type: "object",
-                    required: [ "firstName" ],
-					properties: {
-						firstName: {
-							type: "string",
-							description: "The person's first name.",
-						},
-					},
-				},
+                type: "object",
+                properties: {
+                    body: {
+                        type: "object",
+                        required: [ "firstName" ],
+                        properties: {
+                            firstName: {
+                                type: "string",
+                                description: "The person's first name.",
+                            },
+                        },
+                    },
+                },
 			}],
         });
 
@@ -262,10 +280,10 @@ describe('ApiTree', () => {
         });
 
 		return api.get({body: {}}).catch((reason) => {
-            expect(reason).toEqual(new ValidationError({body: [{
-                dataPath: '',
+            expect(reason).toEqual(new ValidationError('https://backend/v1/users/:id', [{
+                dataPath: '.body',
                 message: "should have required property 'firstName'",
-            }]}));
+            }]));
 		});
     });
 
@@ -274,16 +292,19 @@ describe('ApiTree', () => {
             get: ['/users/:id', {
 			}, {
                 $schema: "http://json-schema.org/draft-07/schema#",
-				body: {
-					type: "object",
-                    required: [ "firstName" ],
-					properties: {
-						firstName: {
-							type: "string",
-							description: "The person's first name.",
-						},
-					},
-				},
+                type: "object",
+                properties: {
+                    body: {
+                        type: "object",
+                        required: [ "firstName" ],
+                        properties: {
+                            firstName: {
+                                type: "string",
+                                description: "The person's first name.",
+                            },
+                        },
+                    },
+                },
 			}],
         });
 
@@ -293,10 +314,10 @@ describe('ApiTree', () => {
         });
 
 		return api.get().catch((reason) => {
-            expect(reason).toEqual(new ValidationError({body: [{
+            expect(reason).toEqual(new ValidationError('https://backend/v1/users/:id', [{
                 dataPath: '',
                 message: "should have required property 'firstName'",
-            }]}));
+            }]));
 		});
     });
 

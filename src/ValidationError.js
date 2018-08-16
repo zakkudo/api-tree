@@ -8,15 +8,12 @@ export default class ValidationError extends Error {
     /**
      * @private
      */
-    constructor(errorsByKey = {}) {
-        const messages = Object.keys(errorsByKey).reduce((accumulator, k) => {
-            const errors = errorsByKey[k] || [];
-
-            return accumulator.concat(errors.map((e) => `${k}${e.dataPath}: ${e.message}`));
-        }, []);
+    constructor(url, errors = [], schema) {
+        const messages = errors.map((e) => `<${url}> ${e.dataPath}: ${e.message}`);
 
         super(JSON.stringify(messages, null, 4));
-        this.errorsByKey = errorsByKey;
+        this.errors = errors;
+        this.schema = schema;
     }
 
     /**

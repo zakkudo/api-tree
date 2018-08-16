@@ -73,10 +73,10 @@ function generateFetchMethod(self, config) {
             );
             const url = `${self.baseUrl}${pathname}`;
             validate[index](options);
-            const errorsByKey = validate[index].errors;
+            const errors = validate[index].errors;
 
-            if (errorsByKey) {
-                return Promise.reject(new ValidationError(errorsByKey));
+            if (errors) {
+                return Promise.reject(new ValidationError(url, errors, schema));
             }
 
             return fetch(url, options);
@@ -95,10 +95,10 @@ function generateFetchMethod(self, config) {
             );
             const url = `${self.baseUrl}${pathname}`;
             validate(options);
-            const errorsByKey = validate.error;
+            const errors = validate.errors;
 
-            if (errorsByKey) {
-                return Promise.reject(new ValidationError(errorsByKey));
+            if (errors) {
+                return Promise.reject(new ValidationError(url, errors, schema));
             }
 
             return fetch(url, options);
