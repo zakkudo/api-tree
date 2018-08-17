@@ -8,7 +8,7 @@
     "api",
     "validation"
   ],
-  "main": "build/index.js",
+  "main": "index.js",
   "files": [
     "build/**/*"
   ],
