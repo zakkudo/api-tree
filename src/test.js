@@ -467,4 +467,25 @@ describe('ApiTree', () => {
             expect(response).toEqual('test response');
         });
     });
+
+    it('handles undefined gracefully', () => {
+        const api = new ApiTree('https://backend/v1', {
+            get: [
+                ['/users'],
+            ],
+        });
+
+        expect(JSON.parse(JSON.stringify(api))).toEqual({
+            baseUrl: 'https://backend/v1',
+            options: {},
+        });
+
+        return api.get().then((response) => {
+            expect(Helper.getCallArguments(fetch)).toEqual([[
+                'https://backend/v1/users',
+                {},
+            ]]);
+            expect(response).toEqual('test response');
+        });
+    });
 });

@@ -8,14 +8,19 @@ const validator = new Validator({
     unknownFormats: "ignore",
 });
 
-
+/**
+ * @private
+ */
 function getTemplateVariables(pathname) {
     const matches = pathname.match(/\/:[^\/]+/g) || [];
 
     return matches.map((p) => p.slice(2));
 }
 
-function getMatchingOverload(overloads, baseOptions = {}, overrideOptions = {}) {
+/**
+ * @private
+ */
+function getMatchingOverload(overloads, baseOptions, overrideOptions) {
     let matchCount = -1;
     let bestMatch = null;
     let matchIndex = -1;
@@ -23,7 +28,7 @@ function getMatchingOverload(overloads, baseOptions = {}, overrideOptions = {}) 
 
     overloads.forEach((o, index) => {
         const [pathname, options = {}] = o;
-        const variables = getTemplateVariables(pathname) || [];
+        const variables = getTemplateVariables(pathname);
         const params = Object.assign({}, baseOptions.params || {}, options.params || {}, overrideParams);
 
         const count = variables.reduce((accumulator, v) => {
@@ -109,6 +114,9 @@ function generateFetchMethod(self, config) {
     }
 }
 
+/**
+ * @private
+ */
 function isOverloaded(data) {
     return Array.isArray(data) && Array.isArray(data[0]);
 }
@@ -147,6 +155,9 @@ function parse(self, data) {
  * [JSON Schema]{@link http://json-schema.org/} for the body and params
  * with only a single configuration object. Network calls are executed using
  * a thin convenience wrapper around [fetch]{@link https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch}.
+ *
+ * [![Build Status](https://travis-ci.org/zakkudo/api-tree.svg?branch=master)](https://travis-ci.org/zakkudo/api-tree)
+ * [![Coverage Status](https://coveralls.io/repos/github/zakkudo/api-tree/badge.svg?branch=master)](https://coveralls.io/github/zakkudo/api-tree?branch=master)
  *
  * Why use this?
  *
