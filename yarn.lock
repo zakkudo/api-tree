@@ -523,22 +523,22 @@
     lodash "^4.17.10"
     to-fast-properties "^2.0.0"
 
-"@zakkudo/fetch@^0.0.3":
-  version "0.0.3"
-  resolved "https://registry.yarnpkg.com/@zakkudo/fetch/-/fetch-0.0.3.tgz#ff442911f9952ae6bd25364586d3c69337cbc904"
+"@zakkudo/fetch@^0.0.4":
+  version "0.0.4"
+  resolved "https://registry.yarnpkg.com/@zakkudo/fetch/-/fetch-0.0.4.tgz#4c95bd9bbef6a8d4d2de67af6bea73bafc8acde6"
   dependencies:
-    "@zakkudo/url" "^0.0.8"
+    "@zakkudo/url" "^0.0.9"
     immutable "^3.8.2"
 
-"@zakkudo/query-string@^0.0.3":
-  version "0.0.3"
-  resolved "https://registry.yarnpkg.com/@zakkudo/query-string/-/query-string-0.0.3.tgz#a5ac5b2377d84d89449419ae1cee8a53286a933e"
+"@zakkudo/query-string@^0.0.5":
+  version "0.0.5"
+  resolved "https://registry.yarnpkg.com/@zakkudo/query-string/-/query-string-0.0.5.tgz#22785c35b265dca56f756d69373764989e52db46"
 
-"@zakkudo/url@^0.0.8":
-  version "0.0.8"
-  resolved "https://registry.yarnpkg.com/@zakkudo/url/-/url-0.0.8.tgz#d3c17c4a3b52d1625ace59b0f9ae007d26e9e72e"
+"@zakkudo/url@^0.0.9":
+  version "0.0.9"
+  resolved "https://registry.yarnpkg.com/@zakkudo/url/-/url-0.0.9.tgz#bf1cfeb17cdea30cfa64887b99f75872b01f7a4f"
   dependencies:
-    "@zakkudo/query-string" "^0.0.3"
+    "@zakkudo/query-string" "^0.0.5"
 
 abab@^1.0.4:
   version "1.0.4"
