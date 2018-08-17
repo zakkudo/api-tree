@@ -3,7 +3,9 @@ import Validator from 'ajv';
 import fetch from '@zakkudo/fetch';
 import {fromJS} from 'immutable';
 
-const validator = new Validator();
+const validator = new Validator({
+    unknownFormats: "ignore",
+});
 
 
 function getTemplateVariables(pathname) {

@@ -342,6 +342,41 @@ describe('ApiTree', () => {
         });
     });
 
+    it('generates single meaningless override that fails validation', () => {
+        const api = new ApiTree('https://backend/v1', {
+            get: [
+                ['/test/path', {}, {
+                    $schema: "http://json-schema.org/draft-07/schema#",
+                    type: "object",
+                    properties: {
+                        params: {
+                            type: "object",
+                            required: [ "firstName" ],
+                            properties: {
+                                firstName: {
+                                    type: "string",
+                                    description: "The person's first name.",
+                                },
+                            },
+                        },
+                    },
+                }]
+            ],
+        });
+
+        expect(JSON.parse(JSON.stringify(api))).toEqual({
+            baseUrl: 'https://backend/v1',
+            options: {}
+        });
+
+        return api.get({'params': {id: '1234'}}).catch((reason) => {
+            expect(reason).toEqual(new ValidationError('https://backend/v1/test/path', [{
+                dataPath: '.params',
+                message: "should have required property 'firstName'",
+            }]));
+        });
+    });
+
     it('uses matching override when first', () => {
         const api = new ApiTree('https://backend/v1', {
             get: [
