@@ -4,6 +4,7 @@ import fetch from '@zakkudo/fetch';
 import {fromJS} from 'immutable';
 
 const validator = new Validator({
+    logger: false,
     unknownFormats: "ignore",
 });
 
