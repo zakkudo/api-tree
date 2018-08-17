@@ -9,4 +9,4 @@ yarn cover
 cp package.json build/package.json
 cp README.md build/README.md
 
-yarn publish --access public build
+yarn publish --access public --cwd build

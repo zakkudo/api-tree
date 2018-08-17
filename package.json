@@ -10,7 +10,7 @@
   ],
   "main": "index.js",
   "files": [
-    "build/**/*"
+    "*"
   ],
   "repository": "github:zakkudo/api-tree",
   "license": "BSD-3-Clause",
