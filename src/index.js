@@ -166,6 +166,8 @@ function parse(self, data) {
  * - Use json schemas to ensure correct usage of the apis
  * - Share authorization handling using a single location that can be updated dynamically
  * - Share a single transform for the responses and request in a location that can be updated dynamically
+ * - Supports overloading the tree methods so that you can use the same method
+ *   for getting a single item or a collection of items
  *
  * Install with:
  *

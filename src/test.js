@@ -321,7 +321,7 @@ describe('ApiTree', () => {
 		});
     });
 
-    it('generates single meaningless override that always gets used', () => {
+    it('generates single meaningless overload that always gets used', () => {
         const api = new ApiTree('https://backend/v1', {
             get: [
                 ['/test/path']
@@ -342,7 +342,7 @@ describe('ApiTree', () => {
         });
     });
 
-    it('generates single meaningless override that fails validation', () => {
+    it('generates single meaningless overload that fails validation', () => {
         const api = new ApiTree('https://backend/v1', {
             get: [
                 ['/test/path', {}, {
@@ -377,7 +377,7 @@ describe('ApiTree', () => {
         });
     });
 
-    it('uses matching override when first', () => {
+    it('uses matching overload when first', () => {
         const api = new ApiTree('https://backend/v1', {
             get: [
                 ['/test/path/:id'],
@@ -399,7 +399,7 @@ describe('ApiTree', () => {
         });
     });
 
-    it('uses matching override when last', () => {
+    it('uses matching overload when last', () => {
         const api = new ApiTree('https://backend/v1', {
             get: [
                 ['/test/path'],
@@ -486,6 +486,149 @@ describe('ApiTree', () => {
                 {},
             ]]);
             expect(response).toEqual('test response');
+        });
+    });
+
+    it('passes the transforms through from the global config', () => {
+        const transformResponseMock = jest.fn();
+        transformResponseMock.mockReturnValue('test transformed response');
+
+        const transformRequestMock = jest.fn();
+        transformRequestMock.mockReturnValue('test transformed request');
+
+        const transformErrorMock = jest.fn();
+        transformErrorMock.mockReturnValue('test transformed error');
+
+        const api = new ApiTree('https://backend/v1', {
+            get: ['/users/:id', {
+                transformResponse: 'test transform response',
+                transformRequest: 'test transform request',
+                transformError: 'test transform error',
+            }],
+        });
+
+        expect(JSON.parse(JSON.stringify(api))).toEqual({
+            baseUrl: 'https://backend/v1',
+            options: {
+            },
+        });
+
+        return api.get({'params': {id: '1234', detail: true}}).then((response) => {
+            expect(Helper.getCallArguments(fetch)).toEqual([[
+                'https://backend/v1/users/:id',
+                {
+                    params: {id: '1234', detail: true},
+                    transformResponse: 'test transform response',
+                    transformRequest: 'test transform request',
+                    transformError: 'test transform error',
+                },
+            ]]);
+        });
+    });
+
+    it('allows overriding a transform on run', () => {
+        const transformResponseMock = jest.fn();
+        transformResponseMock.mockReturnValue('test transformed response');
+
+        const transformRequestMock = jest.fn();
+        transformRequestMock.mockReturnValue('test transformed request');
+
+        const transformErrorMock = jest.fn();
+        transformErrorMock.mockReturnValue('test transformed error');
+
+        const api = new ApiTree('https://backend/v1', {
+            get: ['/users/:id', {
+                transformResponse: 'test transform response',
+                transformRequest: 'test transform request',
+                transformError: 'test transform error',
+            }],
+        });
+
+        expect(JSON.parse(JSON.stringify(api))).toEqual({
+            baseUrl: 'https://backend/v1',
+            options: {
+            },
+        });
+
+        return api.get({
+            'params': {id: '1234', detail: true},
+            transformResponse: 'test transform response override',
+            transformRequest: 'test transform request override',
+            transformError: 'test transform error override',
+        }).then((response) => {
+            expect(Helper.getCallArguments(fetch)).toEqual([[
+                'https://backend/v1/users/:id',
+                {
+                    params: {id: '1234', detail: true},
+                    transformResponse: 'test transform response override',
+                    transformRequest: 'test transform request override',
+                    transformError: 'test transform error override',
+                },
+            ]]);
+        });
+    });
+
+    it('passes the headers through from the global config', () => {
+        const api = new ApiTree('https://backend/v1', {
+            get: ['/users/:id', {
+                headers: {
+                    'X-AUTH-TOKEN': '1234',
+                    'Authorization': 'Basic 1234',
+                },
+            }],
+        });
+
+        expect(JSON.parse(JSON.stringify(api))).toEqual({
+            baseUrl: 'https://backend/v1',
+            options: {
+            },
+        });
+
+        return api.get({'params': {id: '1234', detail: true}}).then((response) => {
+            expect(Helper.getCallArguments(fetch)).toEqual([[
+                'https://backend/v1/users/:id',
+                {
+                    params: {id: '1234', detail: true},
+                    headers: {
+                        'X-AUTH-TOKEN': '1234',
+                        'Authorization': 'Basic 1234',
+                    },
+                },
+            ]]);
+        });
+    });
+
+    it('passes the overides headers from the global config', () => {
+        const api = new ApiTree('https://backend/v1', {
+            get: ['/users/:id', {
+                headers: {
+                    'X-AUTH-TOKEN': '1234',
+                    'Authorization': 'Basic 1234',
+                },
+            }],
+        });
+
+        expect(JSON.parse(JSON.stringify(api))).toEqual({
+            baseUrl: 'https://backend/v1',
+            options: {
+            },
+        });
+
+        return api.get({
+            'params': {id: '1234', detail: true},
+            headers: {
+                'X-AUTH-TOKEN': '5678',
+            }
+        }).then((response) => {
+            expect(Helper.getCallArguments(fetch)).toEqual([[
+                'https://backend/v1/users/:id',
+                {
+                    params: {id: '1234', detail: true},
+                    headers: {
+                        'X-AUTH-TOKEN': '5678',
+                    },
+                },
+            ]]);
         });
     });
 });
