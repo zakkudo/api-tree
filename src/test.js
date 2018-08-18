@@ -116,6 +116,74 @@ describe('ApiTree', () => {
 		});
     });
 
+    it('ignores validation for params field when disabled', () => {
+        const api = new ApiTree('https://backend/v1', {
+            get: ['/users/:id', {
+			}, {
+                $schema: "http://json-schema.org/draft-07/schema#",
+                type: "object",
+                properties: {
+                    params: {
+                        type: "object",
+                        properties: {
+                            firstName: {
+                                type: "string",
+                                description: "The person's first name.",
+                            },
+                        },
+                    },
+                },
+			}],
+        });
+
+        expect(JSON.parse(JSON.stringify(api))).toEqual({
+            baseUrl: 'https://backend/v1',
+            options: {},
+        });
+
+        return api.get({params: {id: '1234'}}, false).then((response) => {
+            expect(Helper.getCallArguments(fetch)).toEqual([[
+                'https://backend/v1/users/:id',
+                {params: {id: '1234'}},
+            ]]);
+            expect(response).toEqual('test response');
+        });
+    });
+
+    it('ignores validation for overloaded get params field when disabled', () => {
+        const api = new ApiTree('https://backend/v1', {
+            get: [['/users/:id', {
+			}, {
+                $schema: "http://json-schema.org/draft-07/schema#",
+                type: "object",
+                properties: {
+                    params: {
+                        type: "object",
+                        properties: {
+                            firstName: {
+                                type: "string",
+                                description: "The person's first name.",
+                            },
+                        },
+                    },
+                },
+			}]],
+        });
+
+        expect(JSON.parse(JSON.stringify(api))).toEqual({
+            baseUrl: 'https://backend/v1',
+            options: {},
+        });
+
+        return api.get({params: {id: '1234'}}, false).then((response) => {
+            expect(Helper.getCallArguments(fetch)).toEqual([[
+                'https://backend/v1/users/:id',
+                {params: {id: '1234'}},
+            ]]);
+            expect(response).toEqual('test response');
+        });
+    });
+
     it('throws required validation error for params field', () => {
         const api = new ApiTree('https://backend/v1', {
             get: ['/users/:id', {

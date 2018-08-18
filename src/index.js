@@ -62,13 +62,13 @@ function getMatchingOverload(overloads, baseOptions, overrideOptions) {
  */
 function generateFetchMethod(self, config) {
     if (isOverloaded(config)) {
-        const validate = config.map((c) => {
+        const compiled = config.map((c) => {
             const [pathname, endpointOptions, schema = {}] = c;
 
             return validator.compile(schema);
         });
 
-        return (overrideOptions = {}) => {
+        return (overrideOptions = {}, validate = true) => {
             const baseOptions = self.options.toJS();
             const index = getMatchingOverload(config, baseOptions, overrideOptions);
             const overload = config[index];
@@ -80,8 +80,14 @@ function generateFetchMethod(self, config) {
                 overrideOptions
             );
             const url = `${self.baseUrl}${pathname}`;
-            validate[index](options);
-            const errors = validate[index].errors;
+
+            delete compiled[index].errors;
+
+            if (validate) {
+                compiled[index](options);
+            }
+
+            const errors = compiled[index].errors;
 
             if (errors) {
                 return Promise.reject(new ValidationError(url, errors, schema));
@@ -91,10 +97,10 @@ function generateFetchMethod(self, config) {
         };
     } else {
         const [pathname, endpointOptions, schema = {}] = config;
-        const validate = validator.compile(schema);
+        const compiled = validator.compile(schema);
 
 
-        return (overrideOptions = {}) => {
+        return (overrideOptions = {}, validate = true) => {
             const baseOptions = self.options.toJS();
             const options = Object.assign(
                 baseOptions,
@@ -102,8 +108,13 @@ function generateFetchMethod(self, config) {
                 overrideOptions
             );
             const url = `${self.baseUrl}${pathname}`;
-            validate(options);
-            const errors = validate.errors;
+
+            delete compiled.errors;
+
+            if (validate) {
+                compiled(options);
+            }
+            const errors = compiled.errors;
 
             if (errors) {
                 return Promise.reject(new ValidationError(url, errors, schema));
@@ -177,6 +188,8 @@ function parse(self, data) {
  *
  * @example
  * import ApiTree from '@zakkudo/api-tree';
+ * import HttpError from '@zakkudo/fetch/HttpError';
+ * import ValidationError from '@zakkudo/api-tree/ValidationError';
  *
  * const api = new ApiTree('https://backend', {
  *     users: {
@@ -222,6 +235,13 @@ function parse(self, data) {
  * }, {
  *     headers: {
  *          'X-AUTH-TOKEN': '1234'
+ *     },
+ *     transformError(reason) {
+ *         if (reason instanceof HttpError && reason.status === 401) {
+ *             login();
+ *         }
+ *
+ *         return reason;
  *     }
  * });
  *
@@ -245,12 +265,25 @@ function parse(self, data) {
  *
  * // Try fetching without an id
  * api.users.get().catch((reason) => {
+ *      console.log(reason instanceof ValidationError); //true
  *      console.log(reason); // "params: should have required property 'userId'
  * })
  *
  * // Try using an invalidly formatted id
  * api.users.get({params: {userId: 'invalid format'}}).catch((reason) => {
+ *      console.log(reason instanceof ValidationError); //true
  *      console.log(reason); // "params.userId: should match pattern \"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\""
+ * });
+ *
+ * // Force execution with an invalidly formatted id
+ * api.users.get({params: {userId: 'invalid format'}}, false).catch((reason) => {
+ *      console.log(reason instanceof HttpError); //true
+ *      console.log(reason.status); // 500
+ * });
+ *
+ * // Override the global options at any time
+ * api.users.get({transformResponse: () => 'something else'}).then((response) => {
+ *    console.log(response); // 'something else'
  * });
  *
  * @module ApiTree
@@ -261,7 +294,25 @@ export default class ApiTree {
      * @param {*} tree - The configuration tree for the apis. Accepts a
      * deeply nested set of objects where array are interpreted to be of the form `[path, options, schema]`. Thos array are converted into
      * api fetching functions.
-     * @param {Object} options - Options that will be the default base init for fetch operations. The same as those used for `@zakkudo/fetch`
+     * @param {Object} options - Options modifying the network call, mostly analogous to fetch
+     * @param {String} [options.method='GET'] - GET, POST, PUT, DELETE, etc.
+     * @param {String} [options.mode='same-origin'] - no-cors, cors, same-origin
+     * @param {String} [options.cache='default'] - default, no-cache, reload, force-cache, only-if-cached
+     * @param {String} [options.credentials='omit'] - include, same-origin, omit
+     * @param {String} options.headers - "application/json; charset=utf-8".
+     * @param {String} [options.redirect='follow'] - manual, follow, error
+     * @param {String} [options.referrer='client'] - no-referrer, client
+     * @param {String|Object} [options.body] - `JSON.stringify` is automatically run for non-string types
+     * @param {String} [options.params] - Query params to be appended to the url. The url must not already have params.
+     * @param {Function|Array<Function>} [options.transformRequest] - Transforms for the request body.
+     * When not supplied, it by default json serializes the contents if not a simple string.
+     * @param {Function|Array<Function>} [options.transformResponse] - Transform the response.
+     * @param {Function|Array<Function>} [options.transformError] - Transform the
+     * error response. Return the error to keep the error state.  Return a non
+     * `Error` to recover from the error in the promise chain.  A good place to place a login
+     * handler when recieving a `401` from a backend endpoint or redirect to another page.
+     * It's preferable to never throw an error here which will break the error transform chain in
+     * a non-graceful way.
      * @return {Object} The generated api tree
     */
     constructor(baseUrl, tree, options = {}) {

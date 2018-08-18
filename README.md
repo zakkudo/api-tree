@@ -17,6 +17,8 @@ Why use this?
 - Use json schemas to ensure correct usage of the apis
 - Share authorization handling using a single location that can be updated dynamically
 - Share a single transform for the responses and request in a location that can be updated dynamically
+- Supports overloading the tree methods so that you can use the same method
+  for getting a single item or a collection of items
 
 Install with:
 
@@ -27,6 +29,8 @@ yarn add @zakkudo/api-tree
 **Example**  
 ```js
 import ApiTree from '@zakkudo/api-tree';
+import HttpError from '@zakkudo/fetch/HttpError';
+import ValidationError from '@zakkudo/api-tree/ValidationError';
 
 const api = new ApiTree('https://backend', {
     users: {
@@ -72,6 +76,13 @@ const api = new ApiTree('https://backend', {
 }, {
     headers: {
          'X-AUTH-TOKEN': '1234'
+    },
+    transformError(reason) {
+        if (reason instanceof HttpError && reason.status === 401) {
+            login();
+        }
+
+        return reason;
     }
 });
 
@@ -95,12 +106,25 @@ api.users.get({params: {userId: 'ff599c67-1cac-4167-927e-49c02c93625f'}}).then((
 
 // Try fetching without an id
 api.users.get().catch((reason) => {
+     console.log(reason instanceof ValidationError); //true
      console.log(reason); // "params: should have required property 'userId'
 })
 
 // Try using an invalidly formatted id
 api.users.get({params: {userId: 'invalid format'}}).catch((reason) => {
+     console.log(reason instanceof ValidationError); //true
      console.log(reason); // "params.userId: should match pattern \"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\""
+});
+
+// Force execution with an invalidly formatted id
+api.users.get({params: {userId: 'invalid format'}}, false).catch((reason) => {
+     console.log(reason instanceof HttpError); //true
+     console.log(reason.status); // 500
+});
+
+// Override the global options at any time
+api.users.get({transformResponse: () => 'something else'}).then((response) => {
+   console.log(response); // 'something else'
 });
 ```
 
@@ -117,9 +141,21 @@ api.users.get({params: {userId: 'invalid format'}}).catch((reason) => {
 #### new module.exports(baseUrl, tree, options)
 **Returns**: <code>Object</code> - The generated api tree  
 
-| Param | Type | Description |
-| --- | --- | --- |
-| baseUrl | <code>String</code> | The url to prefix with all paths |
-| tree | <code>\*</code> | The configuration tree for the apis. Accepts a deeply nested set of objects where array are interpreted to be of the form `[path, options, schema]`. Thos array are converted into api fetching functions. |
-| options | <code>Object</code> | Options that will be the default base init for fetch operations. The same as those used for `@zakkudo/fetch` |
+| Param | Type | Default | Description |
+| --- | --- | --- | --- |
+| baseUrl | <code>String</code> |  | The url to prefix with all paths |
+| tree | <code>\*</code> |  | The configuration tree for the apis. Accepts a deeply nested set of objects where array are interpreted to be of the form `[path, options, schema]`. Thos array are converted into api fetching functions. |
+| options | <code>Object</code> |  | Options modifying the network call, mostly analogous to fetch |
+| [options.method] | <code>String</code> | <code>&#x27;GET&#x27;</code> | GET, POST, PUT, DELETE, etc. |
+| [options.mode] | <code>String</code> | <code>&#x27;same-origin&#x27;</code> | no-cors, cors, same-origin |
+| [options.cache] | <code>String</code> | <code>&#x27;default&#x27;</code> | default, no-cache, reload, force-cache, only-if-cached |
+| [options.credentials] | <code>String</code> | <code>&#x27;omit&#x27;</code> | include, same-origin, omit |
+| options.headers | <code>String</code> |  | "application/json; charset=utf-8". |
+| [options.redirect] | <code>String</code> | <code>&#x27;follow&#x27;</code> | manual, follow, error |
+| [options.referrer] | <code>String</code> | <code>&#x27;client&#x27;</code> | no-referrer, client |
+| [options.body] | <code>String</code> \| <code>Object</code> |  | `JSON.stringify` is automatically run for non-string types |
+| [options.params] | <code>String</code> |  | Query params to be appended to the url. The url must not already have params. |
+| [options.transformRequest] | <code>function</code> \| <code>Array.&lt;function()&gt;</code> |  | Transforms for the request body. When not supplied, it by default json serializes the contents if not a simple string. |
+| [options.transformResponse] | <code>function</code> \| <code>Array.&lt;function()&gt;</code> |  | Transform the response. |
+| [options.transformError] | <code>function</code> \| <code>Array.&lt;function()&gt;</code> |  | Transform the error response. Return the error to keep the error state.  Return a non `Error` to recover from the error in the promise chain.  A good place to place a login handler when recieving a `401` from a backend endpoint or redirect to another page. It's preferable to never throw an error here which will break the error transform chain in a non-graceful way. |
 
