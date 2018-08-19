@@ -1,6 +1,6 @@
 {
   "name": "@zakkudo/api-tree",
-  "version": "0.0.10",
+  "version": "0.0.12",
   "description": "Make working with backend api trees enjoyable.",
   "keywords": [
     "fetch",
@@ -31,7 +31,7 @@
     "regenerator-runtime": "^0.12.1"
   },
   "dependencies": {
-    "@zakkudo/fetch": "^0.0.4",
+    "@zakkudo/fetch": "^0.0.6",
     "ajv": "^6.5.2"
   },
   "scripts": {
