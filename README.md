@@ -1,15 +1,21 @@
 <a name="module_ApiTree"></a>
 
 ## ApiTree
-Make working with backend api trees enjoyable. Generate an
+Make working with backend api trees enjoyable.
+
+[![Build Status](https://travis-ci.org/zakkudo/api-tree.svg?branch=master)](https://travis-ci.org/zakkudo/api-tree)
+[![Coverage Status](https://coveralls.io/repos/github/zakkudo/api-tree/badge.svg?branch=master)](https://coveralls.io/github/zakkudo/api-tree?branch=master)
+
+Generate an
 easy to use api tree that includes format checking using
 [JSON Schema](http://json-schema.org/) for the body and params
 with only a single configuration object. Network calls are executed using
 a thin convenience wrapper around
 [fetch](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch).
 
-[![Build Status](https://travis-ci.org/zakkudo/api-tree.svg?branch=master)](https://travis-ci.org/zakkudo/api-tree)
-[![Coverage Status](https://coveralls.io/repos/github/zakkudo/api-tree/badge.svg?branch=master)](https://coveralls.io/github/zakkudo/api-tree?branch=master)
+If you're using [swagger](https://swagger.io/)/[openapi](https://www.openapis.org/),
+checkout `@zakkudo/open-api-tree` which generates this configuration for
+you from swagger's metadata.
 
 Why use this?
 
