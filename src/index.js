@@ -12,7 +12,7 @@ const validator = new Validator({
  * @private
  */
 function getTemplateVariables(pathname) {
-    const matches = pathname.match(/\/:[^\/]+/g) || [];
+    const matches = pathname.match(/\/:[^/]+/g) || [];
 
     return matches.map((p) => p.slice(2));
 }
@@ -22,14 +22,17 @@ function getTemplateVariables(pathname) {
  */
 function getMatchingOverload(overloads, baseOptions, overrideOptions) {
     let matchCount = -1;
-    let bestMatch = null;
     let matchIndex = -1;
     const overrideParams = overrideOptions.params || {};
 
     overloads.forEach((o, index) => {
         const [pathname, options = {}] = o;
         const variables = getTemplateVariables(pathname);
-        const params = Object.assign({}, baseOptions.params || {}, options.params || {}, overrideParams);
+        const params = Object.assign(
+            {},
+            baseOptions.params || {}, options.params || {},
+            overrideParams
+        );
 
         const count = variables.reduce((accumulator, v) => {
 
@@ -42,7 +45,6 @@ function getMatchingOverload(overloads, baseOptions, overrideOptions) {
 
         if (count > matchCount) {
             matchCount = count;
-            bestMatch = o;
             matchIndex = index;
         }
     });
@@ -63,7 +65,7 @@ function getMatchingOverload(overloads, baseOptions, overrideOptions) {
 function generateFetchMethod(self, config) {
     if (isOverloaded(config)) {
         const compiled = config.map((c) => {
-            const [pathname, endpointOptions, schema = {}] = c;
+            const schema = c[2] || {};
 
             return validator.compile(schema);
         });
@@ -165,7 +167,8 @@ function parse(self, data) {
  * easy to use api tree that includes format checking using
  * [JSON Schema]{@link http://json-schema.org/} for the body and params
  * with only a single configuration object. Network calls are executed using
- * a thin convenience wrapper around [fetch]{@link https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch}.
+ * a thin convenience wrapper around
+ * [fetch]{@link https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch}.
  *
  * [![Build Status](https://travis-ci.org/zakkudo/api-tree.svg?branch=master)](https://travis-ci.org/zakkudo/api-tree)
  * [![Coverage Status](https://coveralls.io/repos/github/zakkudo/api-tree/badge.svg?branch=master)](https://coveralls.io/github/zakkudo/api-tree?branch=master)

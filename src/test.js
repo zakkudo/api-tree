@@ -3,6 +3,13 @@ import ValidationError from './ValidationError';
 import fetch from '@zakkudo/fetch';
 import Helper from './MockTestHelper';
 
+class NotReachableError extends Error {
+    constructor() {
+        super();
+        this.message = 'This code should not be reachable';
+    }
+}
+
 jest.mock('@zakkudo/fetch');
 
 describe('ApiTree', () => {
@@ -108,7 +115,9 @@ describe('ApiTree', () => {
             options: {},
         });
 
-		return api.get({params: {firstName: null}}).catch((reason) => {
+        return api.get({params: {firstName: null}}).then(() => {
+            throw new NotReachableError();
+        }).catch((reason) => {
             expect(reason).toEqual(new ValidationError('https://backend/v1/users/:id', [{
                 dataPath: '.params.firstName',
                 message: 'should be string',
@@ -210,7 +219,9 @@ describe('ApiTree', () => {
             options: {},
         });
 
-		return api.get({params: {}}).catch((reason) => {
+        return api.get({params: {}}).then(() => {
+            throw new NotReachableError();
+        }).catch((reason) => {
             expect(reason).toEqual(new ValidationError('https://backend/v1/users/:id', [{
                 dataPath: '.params',
                 message: "should have required property 'firstName'",
@@ -244,12 +255,13 @@ describe('ApiTree', () => {
             options: {},
         });
 
-		return api.get().catch((reason) => {
-            expect(reason).toEqual(new ValidationError('https://backend/v1/users/:id', [{
-                dataPath: '',
-                message: "should have required property 'firstName'",
-            }]));
-		});
+        return api.get().then((response) => {
+            expect(Helper.getCallArguments(fetch)).toEqual([[
+                'https://backend/v1/users/:id',
+                {},
+            ]]);
+            expect(response).toEqual('test response');
+        });
     });
 
     it('throws type validation error for body field', () => {
@@ -278,7 +290,9 @@ describe('ApiTree', () => {
             options: {},
         });
 
-		return api.get({body: {limit: null}}).catch((reason) => {
+        return api.get({body: {limit: null}}).then(() => {
+            throw new NotReachableError();
+        }).catch((reason) => {
             expect(reason).toEqual(new ValidationError('https://backend/v1/users', [{
                 dataPath: '.body.limit',
                 message: 'should be number',
@@ -313,7 +327,9 @@ describe('ApiTree', () => {
             options: {},
         });
 
-		return api.get({params: {userId: 'invalid id'}}).catch((reason) => {
+        return api.get({params: {userId: 'invalid id'}}).then(() => {
+            throw new NotReachableError();
+        }).catch((reason) => {
             expect(reason).toEqual(new ValidationError('https://backend/v1/users/:userId', [{
                 dataPath: '.params.userId',
                 message: 'should match pattern \"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"',
@@ -347,7 +363,9 @@ describe('ApiTree', () => {
             options: {},
         });
 
-		return api.get({body: {}}).catch((reason) => {
+        return api.get({body: {}}).then(() => {
+            throw new NotReachableError();
+        }).catch((reason) => {
             expect(reason).toEqual(new ValidationError('https://backend/v1/users/:id', [{
                 dataPath: '.body',
                 message: "should have required property 'firstName'",
@@ -381,12 +399,13 @@ describe('ApiTree', () => {
             options: {},
         });
 
-		return api.get().catch((reason) => {
-            expect(reason).toEqual(new ValidationError('https://backend/v1/users/:id', [{
-                dataPath: '',
-                message: "should have required property 'firstName'",
-            }]));
-		});
+        return api.get().then((response) => {
+            expect(Helper.getCallArguments(fetch)).toEqual([[
+                'https://backend/v1/users/:id',
+                {},
+            ]]);
+            expect(response).toEqual('test response');
+        });
     });
 
     it('generates single meaningless overload that always gets used', () => {
@@ -437,7 +456,9 @@ describe('ApiTree', () => {
             options: {}
         });
 
-        return api.get({'params': {id: '1234'}}).catch((reason) => {
+        return api.get({'params': {id: '1234'}}).then(() => {
+            throw new NotReachableError();
+        }).catch((reason) => {
             expect(reason).toEqual(new ValidationError('https://backend/v1/test/path', [{
                 dataPath: '.params',
                 message: "should have required property 'firstName'",
