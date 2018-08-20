@@ -197,7 +197,7 @@ function parse(self, data) {
  *
  * @example
  * import ApiTree from '@zakkudo/api-tree';
- * import HttpError from '@zakkudo/fetch/HttpError';
+ * import HttpError from '@zakkudo/api-tree/HttpError';
  * import ValidationError from '@zakkudo/api-tree/ValidationError';
  *
  * const api = new ApiTree('https://backend', {
@@ -316,14 +316,16 @@ export default class ApiTree {
      * the url. The url must not already have params.  The serialization uses the
      * same rules as used by `@zakkudo/query-string`
      * @param {Function|Array<Function>} [options.transformRequest] - Transforms for the request body.
-     * When not supplied, it by default json serializes the contents if not a simple string.
-     * @param {Function|Array<Function>} [options.transformResponse] - Transform the response.
+     * When not supplied, it by default json serializes the contents if not a simple string. Also accepts
+     * promises as return values for asynchronous work.
+     * @param {Function|Array<Function>} [options.transformResponse] - Transform the response.  Also accepts
+     * promises as return values for asynchronous work.
      * @param {Function|Array<Function>} [options.transformError] - Transform the
      * error response. Return the error to keep the error state.  Return a non
      * `Error` to recover from the error in the promise chain.  A good place to place a login
      * handler when recieving a `401` from a backend endpoint or redirect to another page.
      * It's preferable to never throw an error here which will break the error transform chain in
-     * a non-graceful way.
+     * a non-graceful way. Also accepts promises as return values for asynchronous work.
      * @return {Object} The generated api tree
     */
     constructor(baseUrl, tree, options = {}) {
