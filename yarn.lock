@@ -523,9 +523,9 @@
     lodash "^4.17.10"
     to-fast-properties "^2.0.0"
 
-"@zakkudo/fetch@^0.0.7":
-  version "0.0.7"
-  resolved "https://registry.yarnpkg.com/@zakkudo/fetch/-/fetch-0.0.7.tgz#2036e4422d04c8b63ae5666cf7974c43e6680ed2"
+"@zakkudo/fetch@^0.0.8":
+  version "0.0.8"
+  resolved "https://registry.yarnpkg.com/@zakkudo/fetch/-/fetch-0.0.8.tgz#61d48068c82b3575864b128db8bdf6433cc49741"
   dependencies:
     "@zakkudo/url" "^0.0.10"
     immutable "^3.8.2"
