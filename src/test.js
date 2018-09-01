@@ -332,7 +332,7 @@ describe('ApiTree', () => {
         }).catch((reason) => {
             expect(reason).toEqual(new ValidationError('https://backend/v1/users/:userId', [{
                 dataPath: '.params.userId',
-                message: 'should match pattern \"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"',
+                message: 'should match pattern "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"',
             }]));
 		});
     });
@@ -572,6 +572,29 @@ describe('ApiTree', () => {
             expect(Helper.getCallArguments(fetch)).toEqual([[
                 'https://backend/v1/test/path/:id',
                 {params: {id: '1234'}},
+            ]]);
+            expect(response).toEqual('test response');
+        });
+    });
+
+    it('uses first when no best matching', () => {
+        const api = new ApiTree('https://backend/v1', {
+            get: [
+                ['/test/path/:id'],
+            ],
+        });
+
+        expect(JSON.parse(JSON.stringify(api))).toEqual({
+            baseUrl: 'https://backend/v1',
+            options: {},
+        });
+
+        // Note: This method is mocked, but it will usually throw an exception
+        // for this case from fetch
+        return api.get().then((response) => {
+            expect(Helper.getCallArguments(fetch)).toEqual([[
+                'https://backend/v1/test/path/:id',
+                {},
             ]]);
             expect(response).toEqual('test response');
         });

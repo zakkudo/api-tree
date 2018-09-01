@@ -22,7 +22,7 @@ function getTemplateVariables(pathname) {
  */
 function getMatchingOverload(overloads, baseOptions, overrideOptions) {
     let matchCount = -1;
-    let matchIndex = -1;
+    let matchIndex = 0;
     const overrideParams = overrideOptions.params || {};
 
     overloads.forEach((o, index) => {
