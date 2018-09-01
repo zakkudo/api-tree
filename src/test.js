@@ -466,7 +466,7 @@ describe('ApiTree', () => {
         });
     });
 
-    it('uses matching overload when first', () => {
+    it('uses matching get by id overload when first', () => {
         const api = new ApiTree('https://backend/v1', {
             get: [
                 ['/test/path/:id'],
@@ -488,7 +488,7 @@ describe('ApiTree', () => {
         });
     });
 
-    it('uses matching overload when last', () => {
+    it('uses matching get by id overload when last', () => {
         const api = new ApiTree('https://backend/v1', {
             get: [
                 ['/test/path'],
@@ -505,6 +505,51 @@ describe('ApiTree', () => {
             expect(Helper.getCallArguments(fetch)).toEqual([[
                 'https://backend/v1/test/path/:id',
                 {params: {id: '1234'}},
+            ]]);
+            expect(response).toEqual('test response');
+        });
+    });
+
+
+    it('uses matching list overload when first', () => {
+        const api = new ApiTree('https://backend/v1', {
+            get: [
+                ['/test/path/:id'],
+                ['/test/path'],
+            ],
+        });
+
+        expect(JSON.parse(JSON.stringify(api))).toEqual({
+            baseUrl: 'https://backend/v1',
+            options: {},
+        });
+
+        return api.get().then((response) => {
+            expect(Helper.getCallArguments(fetch)).toEqual([[
+                'https://backend/v1/test/path',
+                {},
+            ]]);
+            expect(response).toEqual('test response');
+        });
+    });
+
+    it('uses matching list overload when last', () => {
+        const api = new ApiTree('https://backend/v1', {
+            get: [
+                ['/test/path'],
+                ['/test/path/:id'],
+            ],
+        });
+
+        expect(JSON.parse(JSON.stringify(api))).toEqual({
+            baseUrl: 'https://backend/v1',
+            options: {},
+        });
+
+        return api.get().then((response) => {
+            expect(Helper.getCallArguments(fetch)).toEqual([[
+                'https://backend/v1/test/path',
+                {},
             ]]);
             expect(response).toEqual('test response');
         });

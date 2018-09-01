@@ -40,7 +40,7 @@ function getMatchingOverload(overloads, baseOptions, overrideOptions) {
                 return accumulator + 1;
             }
 
-            return accumulator;
+            return accumulator - 1;
         }, 0);
 
         if (count > matchCount) {
