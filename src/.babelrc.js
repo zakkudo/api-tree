@@ -14,5 +14,7 @@ module.exports = {
     "plugins": [
         ["@babel/transform-runtime", {"corejs": 2}],
         "transform-undefined-to-void"
-    ]
+    ],
+    minified: true,
+    comments: false
 }
