@@ -1,26 +1,39 @@
 /**
- * An error used for future code branches that
- * are not implemented yet.
- * @module ValidationError
- * @private
+ * @module @zakkudo/api-tree/ValiationError
  */
-export default class ValidationError extends Error {
+
+/**
+ * An error used to represent a list of validation issues generated from a JSON schema.
+ * @extends Error
+ */
+class ValidationError extends Error {
     /**
-     * @private
+     * @param {String} url - The url when the validation errors were found
+     * @param {Array<String>} errors - The list of the validation errors
+     * @param {Object} schema - The JSON schema used to generated the validation errors
      */
     constructor(url, errors = [], schema) {
         const messages = errors.map((e) => `<${url}> ${e.dataPath}: ${e.message}`);
 
         super(JSON.stringify(messages, null, 4));
+
+        /**
+         * The list of validaiton errors
+         */
         this.errors = errors;
+
+        /**
+         * The JSON schema used to generated the validation errors
+         */
         this.schema = schema;
     }
 
     /**
-     * @return {String} The error as a human readable string
      * @private
      */
     toString() {
         return `ValidationError: ${this.message}`;
     }
 }
+
+export default ValidationError;
