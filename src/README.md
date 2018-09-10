@@ -6,7 +6,8 @@ Make working with backend api trees enjoyable.
 [![Coverage Status](https://coveralls.io/repos/github/zakkudo/api-tree/badge.svg?branch=master)](https://coveralls.io/github/zakkudo/api-tree?branch=master)
 [![Known Vulnerabilities](https://snyk.io/test/github/zakkudo/api-tree/badge.svg)](https://snyk.io/test/github/zakkudo/api-tree)
 [![Node](https://img.shields.io/node/v/@zakkudo/api-tree.svg)](https://nodejs.org/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License](https://img.shields.io/npm/l/@zakkudo/api-tree.svg)](https://opensource.org/licenses/BSD-3-Clause)
+
 
 Generate an
 easy to use api tree that includes format checking using
