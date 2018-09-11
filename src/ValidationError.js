@@ -18,7 +18,7 @@ class ValidationError extends Error {
         super(JSON.stringify(messages, null, 4));
 
         /**
-         * The list of validaiton errors
+         * The list of validation errors
          */
         this.errors = errors;
 
