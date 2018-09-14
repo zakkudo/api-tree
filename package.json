@@ -1,6 +1,6 @@
 {
   "name": "@zakkudo/api-tree",
-  "version": "0.0.21",
+  "version": "0.0.22",
   "description": "Make working with backend api trees enjoyable.",
   "keywords": [
     "fetch",
