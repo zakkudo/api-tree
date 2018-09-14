@@ -23,7 +23,7 @@ you from swagger's metadata.
 ## Why use this?
 
 - Consistancy with simplicity
-- Leverages native fetch, adding a thin convenience layer.
+- Leverages native fetch, adding a thin convenience layer executed in the form of [Fetch Functions](#apitreefetchfunction--function)
 - Use json schemas to ensure correct usage of the apis
 - Share authorization handling using a single location that can be updated dynamically
 - Share a single transform for the responses and request in a location that can be updated dynamically
@@ -47,7 +47,7 @@ yarn add @zakkudo/api-tree
 ### Base example
 ``` javascript
 // Api methods are simply generated whenever an array is found in the object tree.
-const api = new ApiTree({get: [url, apiDefaultOptions, schema]}, treeDefaultOptions);
+const api = new ApiTree(baseurl, {get: [pathname, apiDefaultOptions, schema]}, treeDefaultOptions);
 
 // The url and default options are predetermed during construction, but the options are overridable on the final function call
 api.get(overrideOptions);
@@ -55,8 +55,8 @@ api.get(overrideOptions);
 // Or don't override anything
 api.get();
 
-//ApiTree merges the different scopes of options to provide many different levels for overriding settings
-fetch(url, Object.assign({}, treeDefaultOptions, apiDefaultOptions, overrideOptions));
+//ApiTree merges the different scopes of options to provide many different levels for overriding settings where if it was written with fetch, it would be similar to this
+fetch(baseurl + pathname, Object.assign({}, treeDefaultOptions, apiDefaultOptions, overrideOptions));
 ```
 
 ### Overloading a function
@@ -64,17 +64,17 @@ fetch(url, Object.assign({}, treeDefaultOptions, apiDefaultOptions, overrideOpti
 //When an api is overloaded by having a nested array, the one with the closest url/params signature will be selected
 const first = ['/users/:userId'];
 const second = ['/users', {params: {limit: 10}}];
-const api = new ApiTree({get: [first, second]}, treeDefaultOptions);
+const api = new ApiTree('http://backend', {get: [first, second]}, treeDefaultOptions);
 
-api.get({params: {userId: '1234'}}); // Uses the first config, making a GET /users/1234
-api.get(); // Uses the second config, making a GET /users?limit=10
+api.get({params: {userId: '1234'}}); // Uses the first config, making a GET http://backend/users/1234
+api.get(); // Uses the second config, making a GET http://backend/users?limit=10
 ```
 
 ### Adding a convenience function
 ``` javascript
 //Sometimes you'll want a function in the api tree that you made yourself
-const api = new ApiTree({
-    delete: [url, {method: 'DELETE'}],
+const api = new ApiTree('http://backend', {
+    delete: ['/users/:id', {method: 'DELETE'}],
     deleteAll(ids) {
         console.log(this.base, this.options); // You have direct access to the configuration of the api tree
 
@@ -89,13 +89,106 @@ api.deleteAll(['1234', '4556']);
 ### Passing through data
 ``` javascript
 //It's not generally recommended, but any primitive data is just passed through as-is
-const api = new ApiTree({limit: 10, name: 'my great api', enabled: true});
+const api = new ApiTree('http://backend', {limit: 10, name: 'my great api', enabled: true});
+
 console.log(api.limit); // 10
 console.log(api.name); // 'my great api'
 console.log(api.enabled); // true
 ```
 
-### Full example
+### Validate your network requests before they're dispatched
+``` javascript
+import ApiTree from '@zakkudo/api-tree';
+import ValidationError from '@zakkudo/api-tree/ValidationError';
+
+// Add a json schema which will be executed before the network request is sent out
+const api = new ApiTree('https://backend', {
+    users: {
+        get: ['/v2/users/:userId', {}, {
+            $schema: "http://json-schema.org/draft-07/schema#",
+            type: 'object',
+            properties: {
+                params: {
+                    type: 'object',
+                    required: ['userId'],
+                    properties: {
+                        userId: {
+                            type: 'string',
+                            pattern: '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}',
+                        },
+                    },
+                },
+            },
+        }],
+    }
+});
+
+// Try fetching without an id
+api.users.get().catch((reason) => {
+    if (reason instanceof ValidationError) {
+        console.log(reason); // "params: should have required property 'userId'
+    }
+
+    throw reason;
+})
+
+// Try using an invalidly formatted id
+api.users.get({params: {userId: 'invalid format'}}).catch((reason) => {
+    if (reason instanceof ValidationError) {
+        console.log(reason); // "params.userId: should match pattern \"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\""
+    }
+
+    throw reason;
+});
+
+// Skip the validation by passing false to the network call
+api.users.get({params: {userId: 'invalid format'}}, false).catch((reason) => {
+    if (reason instanceof HttpError) {
+        console.log(reason.status); // 500
+    }
+
+    thow reason;
+});
+```
+
+### Handling network errors
+``` javascript
+import ApiTree from '@zakkudo/api-tree';
+import HttpError from '@zakkudo/api-tree/HttpError';
+
+const api = new ApiTree('https://backend', {
+    users: {
+        get: ['/v2/users/:userId', {}, {
+             $schema: "http://json-schema.org/draft-07/schema#",
+             type: 'object',
+             properties: {
+                 params: {
+                     type: 'object',
+                     required: ['userId'],
+                     properties: {
+                          userId: {
+                              type: 'string',
+                              pattern: '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}',
+                          },
+                     },
+                 },
+             },
+        }],
+    }
+});
+
+// Force execution with an invalidly formatted id
+api.users.get({params: {userId: 'invalid format'}}, false).catch((reason) => {
+    if (reason instanceof HttpError) {
+        console.log(reason.status); // 500
+        console.log(reason.response); // response body from the server, often json
+    }
+
+    throw reason;
+});
+```
+
+### Overriding options
 ``` javascript
 import ApiTree from '@zakkudo/api-tree';
 import HttpError from '@zakkudo/api-tree/HttpError';
@@ -172,24 +265,6 @@ api.users.post({first_name: 'John', last_name: 'Doe'}).then((response) => {
 api.users.get({params: {userId: 'ff599c67-1cac-4167-927e-49c02c93625f'}}).then((user) => {
      console.log(user); // {id: 'ff599c67-1cac-4167-927e-49c02c93625f', first_name: 'john', last_name: 'doe'}
 })
-
-// Try fetching without an id
-api.users.get().catch((reason) => {
-     console.log(reason instanceof ValidationError); //true
-     console.log(reason); // "params: should have required property 'userId'
-})
-
-// Try using an invalidly formatted id
-api.users.get({params: {userId: 'invalid format'}}).catch((reason) => {
-     console.log(reason instanceof ValidationError); //true
-     console.log(reason); // "params.userId: should match pattern \"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\""
-});
-
-// Force execution with an invalidly formatted id
-api.users.get({params: {userId: 'invalid format'}}, false).catch((reason) => {
-     console.log(reason instanceof HttpError); //true
-     console.log(reason.status); // 500
-});
 
 // Override the global options at any time
 api.users.get({transformResponse: () => 'something else'}).then((response) => {
