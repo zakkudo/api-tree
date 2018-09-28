@@ -147,7 +147,7 @@ api.users.get({params: {userId: 'invalid format'}}, false).catch((reason) => {
         console.log(reason.status); // 500
     }
 
-    thow reason;
+    throw reason;
 });
 ```
 

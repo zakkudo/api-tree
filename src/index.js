@@ -181,13 +181,14 @@ function parse(self, data) {
  * @property {String} [options.mode='same-origin'] - no-cors, cors, same-origin
  * @property {String} [options.cache='default'] - default, no-cache, reload, force-cache, only-if-cached
  * @property {String} [options.credentials='omit'] - include, same-origin, omit
- * @property {String} options.headers - "application/json; charset=utf-8".
+ * @property {String} [options.headers] - "application/json; charset=utf-8".
  * @property {String} [options.redirect='follow'] - manual, follow, error
  * @property {String} [options.referrer='client'] - no-referrer, client
  * @property {String|Object} [options.body] - `JSON.stringify` is automatically run for non-string types
  * @property {String|Object} [options.params] - Query params to be appended to
  * the url. The url must not already have params.  The serialization uses the
  * same rules as used by `@zakkudo/query-string`
+ * @property {Boolean} [options.unsafe] - Disable escaping of params in the url
  * @property {Function|Array<Function>} [options.transformRequest] - Transforms for the request body.
  * When not supplied, it by default json serializes the contents if not a simple string. Also accepts
  * promises as return values for asynchronous work.
