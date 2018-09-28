@@ -146,7 +146,7 @@ api.users.get({params: {userId: 'invalid format'}}, false).catch((reason) => {
         console.log(reason.status); // 500
     }
 
-    thow reason;
+    throw reason;
 });
 ```
 
@@ -324,11 +324,12 @@ Options modifying the network call, mostly analogous to fetch
 | [options.mode] | <code>String</code> | <code>&#x27;same-origin&#x27;</code> | no-cors, cors, same-origin |
 | [options.cache] | <code>String</code> | <code>&#x27;default&#x27;</code> | default, no-cache, reload, force-cache, only-if-cached |
 | [options.credentials] | <code>String</code> | <code>&#x27;omit&#x27;</code> | include, same-origin, omit |
-| options.headers | <code>String</code> |  | "application/json; charset=utf-8". |
+| [options.headers] | <code>String</code> |  | "application/json; charset=utf-8". |
 | [options.redirect] | <code>String</code> | <code>&#x27;follow&#x27;</code> | manual, follow, error |
 | [options.referrer] | <code>String</code> | <code>&#x27;client&#x27;</code> | no-referrer, client |
 | [options.body] | <code>String</code> \| <code>Object</code> |  | `JSON.stringify` is automatically run for non-string types |
 | [options.params] | <code>String</code> \| <code>Object</code> |  | Query params to be appended to the url. The url must not already have params.  The serialization uses the same rules as used by `@zakkudo/query-string` |
+| [options.unsafe] | <code>Boolean</code> |  | Disable escaping of params in the url |
 | [options.transformRequest] | <code>function</code> \| <code>Array.&lt;function()&gt;</code> |  | Transforms for the request body. When not supplied, it by default json serializes the contents if not a simple string. Also accepts promises as return values for asynchronous work. |
 | [options.transformResponse] | <code>function</code> \| <code>Array.&lt;function()&gt;</code> |  | Transform the response.  Also accepts promises as return values for asynchronous work. |
 | [options.transformError] | <code>function</code> \| <code>Array.&lt;function()&gt;</code> |  | Transform the error response. Return the error to keep the error state.  Return a non `Error` to recover from the error in the promise chain.  A good place to place a login handler when recieving a `401` from a backend endpoint or redirect to another page. It's preferable to never throw an error here which will break the error transform chain in a non-graceful way. Also accepts promises as return values for asynchronous work. |
