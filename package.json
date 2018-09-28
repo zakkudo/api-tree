@@ -38,7 +38,7 @@
   },
   "dependencies": {
     "@babel/runtime-corejs2": "^7.0.0",
-    "@zakkudo/fetch": "^0.0.12",
+    "@zakkudo/fetch": "^0.0.13",
     "ajv": "^6.5.2"
   },
   "scripts": {
