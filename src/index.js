@@ -5,7 +5,6 @@
 import ValidationError from './ValidationError';
 import Validator from 'ajv';
 import fetch from '@zakkudo/fetch';
-import {fromJS} from 'immutable';
 
 const validator = new Validator({
     logger: false,
@@ -75,7 +74,7 @@ function generateFetchMethod(self, config) {
         });
 
         return (overrideOptions = {}, validate = true) => {
-            const baseOptions = self.options.toJS();
+            const baseOptions = self.options;
             const index = getMatchingOverload(config, baseOptions, overrideOptions);
             const overload = config[index];
             const [pathname, endpointOptions, schema = {}] = overload;
@@ -107,7 +106,7 @@ function generateFetchMethod(self, config) {
 
 
         return (overrideOptions = {}, validate = true) => {
-            const baseOptions = self.options.toJS();
+            const baseOptions = self.options;
             const options = Object.assign(
                 baseOptions,
                 endpointOptions,
@@ -215,7 +214,7 @@ class ApiTree {
     */
     constructor(baseUrl, tree, options = {}) {
         this.baseUrl = baseUrl || '';
-        this.options = fromJS(options);
+        this.options = options;
         Object.assign(this, parse(this, tree));
     }
 }
