@@ -7,52 +7,52 @@ import Validator from 'ajv';
 import fetch from '@zakkudo/fetch';
 
 const validator = new Validator({
-    logger: false,
-    unknownFormats: "ignore",
+  logger: false,
+  unknownFormats: "ignore",
 });
 
 /**
  * @private
  */
 function getTemplateVariables(pathname) {
-    const matches = pathname.match(/\/:[^/]+/g) || [];
+  const matches = pathname.match(/\/:[^/]+/g) || [];
 
-    return matches.map((p) => p.slice(2));
+  return matches.map((p) => p.slice(2));
 }
 
 /**
  * @private
  */
 function getMatchingOverload(overloads, baseOptions, overrideOptions) {
-    let matchCount = -1;
-    let matchIndex = 0;
-    const overrideParams = overrideOptions.params || {};
+  let matchCount = -1;
+  let matchIndex = 0;
+  const overrideParams = overrideOptions.params || {};
 
-    overloads.forEach((o, index) => {
-        const [pathname, options = {}] = o;
-        const variables = getTemplateVariables(pathname);
-        const params = Object.assign(
-            {},
-            baseOptions.params || {}, options.params || {},
-            overrideParams
-        );
+  overloads.forEach((o, index) => {
+    const [pathname, options = {}] = o;
+    const variables = getTemplateVariables(pathname);
+    const params = Object.assign(
+      {},
+      baseOptions.params || {}, options.params || {},
+      overrideParams
+    );
 
-        const count = variables.reduce((accumulator, v) => {
+    const count = variables.reduce((accumulator, v) => {
 
-            if (params.hasOwnProperty(v)) {
-                return accumulator + 1;
-            }
+      if (params.hasOwnProperty(v)) {
+        return accumulator + 1;
+      }
 
-            return accumulator - 1;
-        }, 0);
+      return accumulator - 1;
+    }, 0);
 
-        if (count > matchCount) {
-            matchCount = count;
-            matchIndex = index;
-        }
-    });
+    if (count > matchCount) {
+      matchCount = count;
+      matchIndex = index;
+    }
+  });
 
-    return matchIndex
+  return matchIndex
 }
 
 /**
@@ -66,75 +66,75 @@ function getMatchingOverload(overloads, baseOptions, overrideOptions) {
  * @private
  */
 function generateFetchMethod(self, config) {
-    if (isOverloaded(config)) {
-        const compiled = config.map((c) => {
-            const schema = c[2] || {};
+  if (isOverloaded(config)) {
+    const compiled = config.map((c) => {
+      const schema = c[2] || {};
 
-            return validator.compile(schema);
-        });
+      return validator.compile(schema);
+    });
 
-        return (overrideOptions = {}, validate = true) => {
-            const baseOptions = self.options;
-            const index = getMatchingOverload(config, baseOptions, overrideOptions);
-            const overload = config[index];
-            const [pathname, endpointOptions, schema = {}] = overload;
-            const options = Object.assign(
-                {},
-                baseOptions,
-                endpointOptions,
-                overrideOptions
-            );
-            const url = `${self.baseUrl}${pathname}`;
+    return (overrideOptions = {}, validate = true) => {
+      const baseOptions = self.options;
+      const index = getMatchingOverload(config, baseOptions, overrideOptions);
+      const overload = config[index];
+      const [pathname, endpointOptions, schema = {}] = overload;
+      const options = Object.assign(
+        {},
+        baseOptions,
+        endpointOptions,
+        overrideOptions
+      );
+      const url = `${self.baseUrl}${pathname}`;
 
-            delete compiled[index].errors;
+      delete compiled[index].errors;
 
-            if (validate) {
-                compiled[index](options);
-            }
+      if (validate) {
+        compiled[index](options);
+      }
 
-            const errors = compiled[index].errors;
+      const errors = compiled[index].errors;
 
-            if (errors) {
-                return Promise.reject(new ValidationError(url, errors, schema));
-            }
+      if (errors) {
+        return Promise.reject(new ValidationError(url, errors, schema));
+      }
 
-            return fetch(url, options);
-        };
-    } else {
-        const [pathname, endpointOptions, schema = {}] = config;
-        const compiled = validator.compile(schema);
+      return fetch(url, options);
+    };
+  } else {
+    const [pathname, endpointOptions, schema = {}] = config;
+    const compiled = validator.compile(schema);
 
 
-        return (overrideOptions = {}, validate = true) => {
-            const baseOptions = self.options;
-            const options = Object.assign(
-                baseOptions,
-                endpointOptions,
-                overrideOptions
-            );
-            const url = `${self.baseUrl}${pathname}`;
+    return (overrideOptions = {}, validate = true) => {
+      const baseOptions = self.options;
+      const options = Object.assign(
+        baseOptions,
+        endpointOptions,
+        overrideOptions
+      );
+      const url = `${self.baseUrl}${pathname}`;
 
-            delete compiled.errors;
+      delete compiled.errors;
 
-            if (validate) {
-                compiled(options);
-            }
-            const errors = compiled.errors;
+      if (validate) {
+        compiled(options);
+      }
+      const errors = compiled.errors;
 
-            if (errors) {
-                return Promise.reject(new ValidationError(url, errors, schema));
-            }
+      if (errors) {
+        return Promise.reject(new ValidationError(url, errors, schema));
+      }
 
-            return fetch(url, options);
-        };
-    }
+      return fetch(url, options);
+    };
+  }
 }
 
 /**
  * @private
  */
 function isOverloaded(data) {
-    return Array.isArray(data) && Array.isArray(data[0]);
+  return Array.isArray(data) && Array.isArray(data[0]);
 }
 
 /**
@@ -146,23 +146,23 @@ function isOverloaded(data) {
  * @private
  */
 function parse(self, data) {
-    // Assume is fetch configuration definition
-    if (Array.isArray(data)) {
-        return generateFetchMethod(self, data);
-        // If it's a function, bind ot the base object for convenience functions
-    } else if (typeof data === 'function') {
-        return data.bind(self);
-        // Otherwise we pass through
-    } else if (Object(data) === data) {
-        return Object.keys(data).reduce((accumulator, k) => {
-            return Object.assign(accumulator, {
-                [k]: parse(self, data[k]),
-            });
-        }, {});
-        // Assume this is deeper in the tree
-    } else {
-        return data;
-    }
+  // Assume is fetch configuration definition
+  if (Array.isArray(data)) {
+    return generateFetchMethod(self, data);
+    // If it's a function, bind ot the base object for convenience functions
+  } else if (typeof data === 'function') {
+    return data.bind(self);
+    // Otherwise we pass through
+  } else if (Object(data) === data) {
+    return Object.keys(data).reduce((accumulator, k) => {
+      return Object.assign(accumulator, {
+        [k]: parse(self, data[k]),
+      });
+    }, {});
+    // Assume this is deeper in the tree
+  } else {
+    return data;
+  }
 }
 
 /**
@@ -202,21 +202,21 @@ function parse(self, data) {
  */
 
 class ApiTree {
-    /**
-     * @param {String} baseUrl - The url to prefix with all paths
-     * @param {*} tree - The configuration tree for the apis. Accepts a
-     * deeply nested set of objects where array are interpreted to be of the
-     * form `[path, options, schema]`. Thos array are converted into
-     * api fetching functions.
-     * @param {module:@zakkudo/api-tree~ApiTree~Options} [options] - Options
-     * modifying the network call, mostly analogous to fetch
-     * @return {Object} The generated api tree
-    */
-    constructor(baseUrl, tree, options = {}) {
-        this.baseUrl = baseUrl || '';
-        this.options = options;
-        Object.assign(this, parse(this, tree));
-    }
+  /**
+   * @param {String} baseUrl - The url to prefix with all paths
+   * @param {*} tree - The configuration tree for the apis. Accepts a
+   * deeply nested set of objects where array are interpreted to be of the
+   * form `[path, options, schema]`. Thos array are converted into
+   * api fetching functions.
+   * @param {module:@zakkudo/api-tree~ApiTree~Options} [options] - Options
+   * modifying the network call, mostly analogous to fetch
+   * @return {Object} The generated api tree
+   */
+  constructor(baseUrl, tree, options = {}) {
+    this.baseUrl = baseUrl || '';
+    this.options = options;
+    Object.assign(this, parse(this, tree));
+  }
 }
 
 export default ApiTree;

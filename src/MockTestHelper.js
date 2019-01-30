@@ -1,7 +1,7 @@
 
 export default class MockTestHelper {
-    static getCallArguments(mock) {
-        return mock.mock.calls;
-    }
+  static getCallArguments(mock) {
+    return mock.mock.calls;
+  }
 }
 
